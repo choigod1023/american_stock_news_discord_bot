@@ -189,6 +189,11 @@ class NewsAPIClient:
         else:
             return "일반"
     
-    def format_news_url(self, news_id: str) -> str:
+    def format_news_url(self, news_id: str, source_api: str = None) -> str:
         """뉴스 상세 페이지 URL을 생성합니다."""
-        return f"https://saveticker.com/community/{news_id}"
+        if source_api == 'news':
+            # News API의 경우 news 라우터 사용
+            return f"https://saveticker.com/news/{news_id}"
+        else:
+            # Community API의 경우 community 라우터 사용
+            return f"https://saveticker.com/community/{news_id}"

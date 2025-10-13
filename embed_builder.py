@@ -61,7 +61,8 @@ class EmbedBuilder:
             embed.add_field(name="🏷️ 태그", value=tags_text, inline=False)
         
         # 상세 링크
-        news_url = api_client.format_news_url(news.get('id', ''))
+        source_api = news.get('_source_api', 'community')
+        news_url = api_client.format_news_url(news.get('id', ''), source_api)
         embed.add_field(name="🔗 상세 보기", value=f"[링크]({news_url})", inline=False)
         
         # 썸네일 (유효한 URL만 설정)

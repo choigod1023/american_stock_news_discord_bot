@@ -55,8 +55,6 @@ pip install -r requirements.txt
 
 ### 2. 환경 변수 설정
 
-`config.env.example` 파일을 참고하여 `.env` 파일을 생성하고 다음 정보를 입력하세요:
-
 ```env
 # 디스코드 봇 토큰
 DISCORD_TOKEN=your_discord_bot_token_here
