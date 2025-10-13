@@ -28,7 +28,10 @@ class NewsCacheManager:
             if os.path.exists(self.news_cache_file):
                 with open(self.news_cache_file, 'r', encoding='utf-8') as f:
                     cache = json.load(f)
-                    logger.info(f"뉴스 캐시 로드 완료: {len(cache.get('news_ids', set()))}개 뉴스")
+                    # JSON에서 로드된 list를 set으로 변환
+                    news_ids_list = cache.get('news_ids', [])
+                    cache['news_ids'] = set(news_ids_list)
+                    logger.info(f"뉴스 캐시 로드 완료: {len(cache['news_ids'])}개 뉴스")
                     return cache
         except Exception as e:
             logger.error(f"뉴스 캐시 로드 실패: {e}")
@@ -107,6 +110,10 @@ class NewsCacheManager:
         try:
             current_news_list = current_response.get('posts', [])
             new_news = []
+            
+            # news_ids가 set이 아닌 경우 set으로 변환
+            if not isinstance(self.news_cache['news_ids'], set):
+                self.news_cache['news_ids'] = set(self.news_cache['news_ids'])
             
             for news in current_news_list:
                 news_id = news.get('id')
