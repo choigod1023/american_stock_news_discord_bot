@@ -62,8 +62,8 @@ pip install -r requirements.txt
 DISCORD_TOKEN=your_discord_bot_token_here
 
 # API 설정
-API_URL=https://api.saveticker.com/api/community/list
-NEWS_API_URL=https://api.saveticker.com/api/news/list
+API_URL=USER_API_URL
+NEWS_API_URL=NEWS_API_URL
 API_PAGE_SIZE=20
 
 # 속보 판단 키워드 (쉼표로 구분)
