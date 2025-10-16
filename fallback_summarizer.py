@@ -5,7 +5,6 @@ import logging
 from typing import List, Dict
 from datetime import datetime
 from stock_utils import sort_news_by_stock_priority, get_popular_tags, format_news_with_stock_info
-from google import genai
 
 logger = logging.getLogger(__name__)
 
