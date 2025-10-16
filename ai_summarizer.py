@@ -4,7 +4,6 @@
 """
 import logging
 from typing import List, Dict, Optional
-from google import genai
 from gemini_client import GeminiClient
 from news_formatter import NewsFormatter
 from fallback_summarizer import FallbackSummarizer
