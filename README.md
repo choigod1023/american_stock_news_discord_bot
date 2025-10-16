@@ -1,6 +1,6 @@
-# 주식 뉴스 디스코드 봇 (속보 감지 기능)
+# 주식 뉴스 디스코드 봇 (AI 리포트 기능)
 
-SaveTicker API를 활용하여 주식 관련 뉴스를 디스코드 채널에 자동으로 전송하는 봇입니다. **속보와 일반 뉴스를 구분하여 처리**하며, **채널 토픽 기반 필터링**을 지원합니다.
+SaveTicker API를 활용하여 주식 관련 뉴스를 디스코드 채널에 자동으로 전송하는 봇입니다. **공식 뉴스는 즉시 알림**, **Community 뉴스는 AI 요약 리포트**로 처리하며, **채널 토픽 기반 필터링**을 지원합니다.
 
 ## 주요 기능
 
@@ -15,20 +15,26 @@ SaveTicker API를 활용하여 주식 관련 뉴스를 디스코드 채널에 �
 - 💾 **파일 기반 캐시**: 이전 API 응답과 비교하여 새로운 뉴스만 감지
 - 🔍 **중복 방지**: 처리된 뉴스 ID를 파일로 저장하여 중복 전송 방지
 - 🔄 **듀얼 API 지원**: Community API와 News API를 동시에 사용하여 더 많은 뉴스 수집
+- 🤖 **AI 요약 리포트**: Gemini AI를 활용한 Community 뉴스 1시간 주기 요약 리포트
+- 📊 **실시간 시장 데이터**: 나스닥 주가, 공포탐욕지수 실시간 수집 및 분석
 - 🏗️ **모듈화된 구조**: 각 기능별로 분리된 모듈로 유지보수성과 확장성 향상
 
-## 뉴스 분류 시스템
+## 뉴스 처리 시스템
 
-### 🚨 속보 (Breaking News)
+### 📰 공식 뉴스 (News API) - 즉시 알림
+
+**데이터 소스**: `NEWS_API_URL` (https://api.saveticker.com/api/news/list)
+
+#### 🚨 속보 (Breaking News)
 
 - **판단 기준**: 제목, 내용, 태그에 속보 키워드 포함
 - **처리 방식**:
   - @everyone 알림
   - 메시지 핀 고정
   - 빨간색 임베드
-  - 🚨 이모지 표시
+  - ⚡ 이모지 표시
 
-### 🔥 중요 뉴스 (Important News)
+#### 🔥 중요 뉴스 (Important News)
 
 - **판단 기준**: 좋아요 5개 이상 또는 조회수 100 이상
 - **처리 방식**:
@@ -37,13 +43,31 @@ SaveTicker API를 활용하여 주식 관련 뉴스를 디스코드 채널에 �
   - 주황색 임베드
   - 🔥 이모지 표시
 
-### 📰 일반 뉴스 (Regular News)
+#### 📈 일반 뉴스 (Regular News)
 
 - **처리 방식**:
   - 알림 없음
   - 핀 고정 없음
   - 초록색 임베드
-  - 📰 이모지 표시
+  - 📈 이모지 표시
+
+### 🤖 Community 뉴스 (Community API) - AI 리포트
+
+**데이터 소스**: `API_URL` (https://api.saveticker.com/api/community/list)
+
+- **처리 방식**: 즉시 알림 없음, 1시간 주기 AI 요약 리포트로 처리
+- **AI 요약**: Gemini AI가 최근 Community 뉴스들과 실시간 시장 데이터를 분석하여 종합 리포트 생성
+- **리포트 내용**:
+  - 📈 상승 요인 뉴스 (긍정적 영향)
+  - 📉 하락 요인 뉴스 (부정적 영향)
+  - 🎯 섹터별 주요 이슈 (기술, 금융, 에너지, 헬스케어, AI, 반도체 등)
+  - 🔥 강세 테마 분석 (현재 주목받는 투자 테마)
+  - 💡 핵심 키워드 (5개 이내)
+  - 📊 시장 심리 분석 (공포탐욕지수와 뉴스 연관성)
+  - 🎲 전체적인 시장 동향 평가 및 전망
+- **실시간 시장 데이터**:
+  - 📊 나스닥 실시간 주가 (변동률, 시장 상태)
+  - 😨📈 공포탐욕지수 (시장 심리 지표)
 
 ## 설치 및 설정
 
@@ -52,6 +76,13 @@ SaveTicker API를 활용하여 주식 관련 뉴스를 디스코드 채널에 �
 ```bash
 pip install -r requirements.txt
 ```
+
+**주요 의존성**:
+
+- `discord.py`: Discord 봇 개발
+- `google-generativeai`: Gemini AI API 연동
+- `aiohttp`: 비동기 HTTP 클라이언트
+- `python-dotenv`: 환경 변수 관리
 
 ### 2. 환경 변수 설정
 
@@ -72,11 +103,35 @@ IMPORTANT_LIKE_THRESHOLD=5
 
 # 업데이트 간격 (초)
 UPDATE_INTERVAL=10
+
+# AI 리포트 설정 (필수)
+GEMINI_API_KEY=your_gemini_api_key_here
+REPORT_INTERVAL=3600
+REPORT_PAGE_SIZE=100
 ```
 
 > **참고**: `DISCORD_CHANNEL_ID`는 더 이상 필요하지 않습니다. 봇은 `american_stock` 토픽을 가진 모든 채널에 자동으로 메시지를 전송합니다.
 
-### 3. 디스코드 봇 생성
+### 3. Gemini API 키 설정
+
+1. [Google AI Studio](https://makersuite.google.com/app/apikey)에서 API 키를 발급받으세요
+2. `.env` 파일의 `GEMINI_API_KEY`에 발급받은 키를 입력하세요
+
+**⚠️ 중요**: Gemini API 키가 없거나 잘못된 경우 AI 요약 대신 기본 요약이 제공됩니다.
+
+**API 키 설정 예시**:
+
+```env
+GEMINI_API_KEY=AIzaSyC...  # 실제 API 키로 교체
+```
+
+**문제 해결**:
+
+- API 키가 없으면 "기본 요약" 모드로 동작
+- API 키 오류 시 로그에 상세한 오류 메시지 표시
+- 모든 모델 초기화 실패 시에도 기본 뉴스 요약 제공
+
+### 4. 디스코드 봇 생성
 
 1. [Discord Developer Portal](https://discord.com/developers/applications)에 접속
 2. "New Application" 클릭하여 새 애플리케이션 생성
@@ -180,6 +235,10 @@ america/
 ├── command_handler.py      # Discord 명령어 처리
 ├── api_client.py          # API 클라이언트 및 속보 감지 로직
 ├── cache_manager.py       # 파일 기반 캐시 관리자
+├── ai_summarizer.py       # Gemini AI 요약 처리
+├── report_scheduler.py    # 1시간 주기 리포트 스케줄링
+├── report_builder.py      # AI 리포트 임베드 생성
+├── market_data.py         # 실시간 시장 데이터 수집 (나스닥, 공포탐욕지수)
 ├── config.py              # 설정 관리
 ├── requirements.txt       # 의존성 목록
 ├── config.env.example     # 환경 변수 예시
@@ -206,6 +265,13 @@ america/
 - **`api_client.py`**: 듀얼 API 지원, 속보 감지, 뉴스 분류
 - **`cache_manager.py`**: 파일 기반 캐시, 중복 방지, 통계 추적
 - **`config.py`**: 환경 변수 관리, 설정 검증
+
+### 🤖 **AI 리포트 모듈**
+
+- **`ai_summarizer.py`**: Gemini AI 연동, 뉴스 요약 생성, 프롬프트 관리, 시장 데이터 분석
+- **`report_scheduler.py`**: 1시간 주기 스케줄링, Community 뉴스 수집, 리포트 생성 트리거
+- **`report_builder.py`**: AI 요약 결과를 Discord 임베드로 변환, 리포트 포맷팅, 시장 데이터 표시
+- **`market_data.py`**: 실시간 나스닥 주가, 공포탐욕지수 수집, Yahoo Finance API 연동
 
 ## 모듈화의 장점
 

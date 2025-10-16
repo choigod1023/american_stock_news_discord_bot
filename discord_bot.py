@@ -9,6 +9,7 @@ from embed_builder import EmbedBuilder
 from image_handler import ImageHandler
 from news_handler import NewsHandler
 from command_handler import CommandHandler
+from report_scheduler import ReportScheduler
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,7 @@ class StockNewsBot(commands.Bot):
         self.image_handler = ImageHandler()
         self.news_handler = NewsHandler(self.config, self.cache_manager)
         self.command_handler = CommandHandler(self.config, self.cache_manager, self.embed_builder, self.news_handler)
+        self.report_scheduler = None  # on_ready에서 초기화
         
     async def on_ready(self):
         logger.info(f'{self.user}로 로그인했습니다!')
@@ -39,9 +41,16 @@ class StockNewsBot(commands.Bot):
         target_channels = await self.find_channels_by_topic('american_stock')
         logger.info(f'american_stock 토픽을 가진 채널 {len(target_channels)}개를 찾았습니다.')
         
-        # 뉴스 체크 작업 시작
+        # 리포트 스케줄러 초기화
+        self.report_scheduler = ReportScheduler(self.config, target_channels, self.embed_builder)
+        
+        # 뉴스 체크 작업 시작 (NEWS_API_URL만 처리)
         if not self.check_news.is_running():
             self.check_news.start()
+        
+        # 리포트 스케줄러 시작 (Community 뉴스 AI 요약)
+        self.report_scheduler.start_scheduler()
+        logger.info("뉴스 체크 및 리포트 스케줄러가 시작되었습니다.")
     
     async def find_channels_by_topic(self, topic: str) -> List[discord.TextChannel]:
         """특정 토픽을 가진 텍스트 채널들을 찾습니다."""
