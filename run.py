@@ -6,7 +6,6 @@
 import sys
 import os
 from discord_bot import main
-from google import genai
 
 if __name__ == "__main__":
     try:
