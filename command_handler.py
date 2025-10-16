@@ -147,3 +147,4 @@ class CommandHandler:
             embed = await self.embed_builder.create_test_embed(test_text, clean_title, is_breaking, news_type)
             await ctx.send(embed=embed)
 
+

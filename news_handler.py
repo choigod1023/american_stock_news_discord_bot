@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import re
+from datetime import datetime
 from typing import List, Dict
 import aiohttp
 from io import BytesIO
@@ -30,6 +32,35 @@ class NewsHandler:
                 if not data:
                     return
                 
+                # (예외 우선 처리) 응답 변경 여부와 무관하게 요약형 커뮤니티 포스트는 즉시 전송 시도
+                try:
+                    all_posts = api_client.get_news_list(data)
+                    summary_candidates = [p for p in all_posts if p.get('_source_api') == 'community' and self._is_summary_style_post(p)]
+                    for post in summary_candidates:
+                        post_id = post.get('id')
+                        if post_id and self.cache_manager.has_sent_summary(post_id):
+                            continue
+                        title = post.get('title', '제목 없음')
+                        url = api_client.format_news_url(post.get('id', ''), post.get('_source_api', 'community'))
+                        # 임베드로 전송
+                        embed = discord.Embed(
+                            title="🧾 커뮤니티 요약",
+                            description=title,
+                            color=0x00bfff,
+                            timestamp=datetime.now()
+                        )
+                        embed.add_field(name="🔗 상세 보기", value=f"[링크]({url})", inline=False)
+                        for channel in target_channels:
+                            try:
+                                await channel.send(embed=embed)
+                                await asyncio.sleep(0.3)
+                            except Exception as e:
+                                logger.error(f"요약형 커뮤니티 포스트 전송 실패: {e}")
+                        if post_id:
+                            self.cache_manager.mark_sent_summary(post_id)
+                except Exception as e:
+                    logger.warning(f"요약형 포스트 선전송 처리 중 경고: {e}")
+
                 # API 응답이 변경되었는지 확인
                 if not self.cache_manager.has_response_changed(data):
                     logger.info("API 응답에 변경사항이 없습니다.")
@@ -50,6 +81,32 @@ class NewsHandler:
                 community_news = [news for news in new_news if news.get('_source_api') == 'community']
                 if community_news:
                     logger.info(f"{len(community_news)}개의 Community 뉴스는 리포트에서 처리됩니다.")
+
+                    # 예외: '장전/장마감/장중 뉴스 한줄 요약(모음)' 스타일은 즉시 텍스트 메시지로 전송
+                    summary_posts = [n for n in community_news if self._is_summary_style_post(n)]
+                    if summary_posts:
+                        logger.info(f"요약형 커뮤니티 포스트 {len(summary_posts)}개를 즉시 메시지로 전송합니다.")
+                        for post in summary_posts:
+                            post_id = post.get('id')
+                            if post_id and self.cache_manager.has_sent_summary(post_id):
+                                continue
+                            title = post.get('title', '제목 없음')
+                            url = api_client.format_news_url(post.get('id', ''), post.get('_source_api', 'community'))
+                            embed = discord.Embed(
+                                title="🧾 커뮤니티 요약",
+                                description=title,
+                                color=0x00bfff,
+                                timestamp=datetime.now()
+                            )
+                            embed.add_field(name="🔗 상세 보기", value=f"[링크]({url})", inline=False)
+                            for channel in target_channels:
+                                try:
+                                    await channel.send(embed=embed)
+                                    await asyncio.sleep(0.5)
+                                except Exception as e:
+                                    logger.error(f"요약형 커뮤니티 포스트 전송 실패: {e}")
+                            if post_id:
+                                self.cache_manager.mark_sent_summary(post_id)
                 
         except Exception as e:
             logger.error(f"뉴스 체크 중 오류 발생: {e}")
@@ -106,6 +163,26 @@ class NewsHandler:
                 
             except Exception as e:
                 logger.error(f"뉴스 전송 중 오류 발생: {e}")
+
+    def _is_summary_style_post(self, news: Dict) -> bool:
+        """커뮤니티 요약형 포스트인지 판단합니다 (예: 장전 뉴스 한줄 요약 모음)."""
+        title = (news.get('title') or '').strip()
+        if not title:
+            return False
+        # 간단 규칙: 제목에 '요약'이 포함되면 요약형으로 간주
+        if '요약' in title:
+            return True
+        # 대표 패턴들: 장전/장마감/장중 + (뉴스)? + 한줄 요약( 모음)
+        patterns = [
+            r"장전\s*뉴스?.*한[\s]*줄\s*요약(\s*모음)?",
+            r"장마감\s*뉴스?.*한[\s]*줄\s*요약(\s*모음)?",
+            r"장중\s*뉴스?.*한[\s]*줄\s*요약(\s*모음)?",
+            r"한[\s]*줄\s*요약\s*모음",
+        ]
+        for pattern in patterns:
+            if re.search(pattern, title, re.IGNORECASE):
+                return True
+        return False
     
     async def get_manual_news(self, api_client: NewsAPIClient, embed_builder, count: int = 3) -> List[Dict]:
         """수동 뉴스 체크를 위한 뉴스 데이터를 가져옵니다."""

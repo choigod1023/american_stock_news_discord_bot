@@ -9,6 +9,7 @@ from config import Config
 from ai_summarizer import AISummarizer
 from report_builder import ReportBuilder
 from market_data import MarketDataCollector
+from stock_utils import format_news_with_stock_info
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +61,16 @@ class ReportScheduler:
                 logger.warning("AI 요약 생성에 실패했습니다.")
                 return
             
-            # 리포트 임베드 생성 (시장 데이터 포함)
-            report_embed = self.report_builder.create_report_embed(summary, len(community_news), market_data)
+            # Discord 필드 길이 제한 검증
+            if len(summary) > 1024:
+                logger.warning(f"요약 길이가 너무 깁니다 ({len(summary)}자). 1024자로 제한합니다.")
+                summary = summary[:1020] + "..."
+            
+            # 주요 헤드라인 생성 (유명 종목 우선, 상위 5개)
+            headlines = format_news_with_stock_info(community_news, max_items=5)
+
+            # 리포트 임베드 생성 (시장 데이터 + 주요 헤드라인 포함)
+            report_embed = self.report_builder.create_report_embed(summary, len(community_news), market_data, headlines)
             
             # 모든 타겟 채널에 리포트 전송
             for channel in self.target_channels:

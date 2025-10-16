@@ -10,7 +10,7 @@ class ReportBuilder:
         """리포트 임베드 빌더를 초기화합니다."""
         pass
     
-    def create_report_embed(self, ai_summary: str, news_count: int, market_data: Dict = None) -> discord.Embed:
+    def create_report_embed(self, ai_summary: str, news_count: int, market_data: Dict = None, headlines: str = "") -> discord.Embed:
         """AI 요약 결과를 Discord 임베드로 변환합니다."""
         try:
             current_time = datetime.now()
@@ -33,15 +33,24 @@ class ReportBuilder:
                 timestamp=current_time
             )
             
-            # 요약 내용 설정
-            if len(ai_summary) > 4096:  # Discord 임베드 설명 최대 길이 제한
-                ai_summary = ai_summary[:4090] + "..."
+            # 요약 내용 설정 (Discord 필드 최대 길이: 1024자)
+            if len(ai_summary) > 1024:
+                ai_summary = ai_summary[:1020] + "..."
             
             embed.add_field(
                 name="📊 1시간 주요 동향",
                 value=ai_summary,
                 inline=False
             )
+
+            # 주요 헤드라인 (디스코드 필드 최대 길이: 1024자)
+            if headlines:
+                truncated_headlines = headlines if len(headlines) <= 1024 else headlines[:1020] + "..."
+                embed.add_field(
+                    name="📰 주요 헤드라인",
+                    value=truncated_headlines,
+                    inline=False
+                )
             
             # 시장 데이터 정보 추가
             market_info = ""
@@ -70,6 +79,10 @@ class ReportBuilder:
                     fg_stale_suffix = " (stale)" if fear_greed.get('stale') else ""
                     market_info += f"{fg_emoji} **공포탐욕지수**: {fg_value} ({fear_greed.get('classification', 'N/A')}){fg_stale_suffix}\n"
             
+            # 시장 정보 필드 길이 제한
+            if len(market_info) > 1024:
+                market_info = market_info[:1020] + "..."
+            
             # 통계 정보
             embed.add_field(
                 name="📊 시장 정보",
@@ -77,11 +90,17 @@ class ReportBuilder:
                 inline=True
             )
             
+            # 리포트 정보 필드 생성 및 길이 제한
+            report_info = f"• 분석 뉴스 수: {news_count}개\n" \
+                         f"• 생성 시간: {current_time.strftime('%H:%M')}\n" \
+                         f"• 데이터 소스: Community API"
+            
+            if len(report_info) > 1024:
+                report_info = report_info[:1020] + "..."
+            
             embed.add_field(
                 name="📈 리포트 정보",
-                value=f"• 분석 뉴스 수: {news_count}개\n"
-                      f"• 생성 시간: {current_time.strftime('%H:%M')}\n"
-                      f"• 데이터 소스: Community API",
+                value=report_info,
                 inline=True
             )
             

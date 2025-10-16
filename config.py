@@ -26,13 +26,16 @@ class Config:
     # AI 리포트 설정
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     REPORT_INTERVAL = int(os.getenv('REPORT_INTERVAL', 3600))  # 1시간 (3600초)
-    REPORT_PAGE_SIZE = int(os.getenv('REPORT_PAGE_SIZE', 100))  # 리포트용 뉴스 수집 개수
+    REPORT_PAGE_SIZE = int(os.getenv('REPORT_PAGE_SIZE', 30))  # 리포트용 뉴스 수집 개수
     
     @classmethod
     def validate(cls):
         """설정값 검증"""
         if not cls.DISCORD_TOKEN:
             raise ValueError("DISCORD_TOKEN이 설정되지 않았습니다.")
+        
+        # GEMINI_API_KEY는 선택사항 (없으면 기본 요약 모드로 동작)
         if not cls.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다.")
+            print("⚠️ 경고: GEMINI_API_KEY가 설정되지 않았습니다. AI 요약 대신 기본 요약이 제공됩니다.")
+        
         # DISCORD_CHANNEL_ID는 더 이상 필수가 아님 (토픽 기반 필터링 사용)

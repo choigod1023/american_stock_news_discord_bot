@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import logging
 from typing import List
+from google import genai
 
 from config import Config
 from cache_manager import NewsCacheManager
@@ -14,6 +15,10 @@ from report_scheduler import ReportScheduler
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Reduce verbosity from google-genai library
+logging.getLogger("google_genai").setLevel(logging.WARNING)
+logging.getLogger("google_genai.models").setLevel(logging.WARNING)
 
 class StockNewsBot(commands.Bot):
     def __init__(self):

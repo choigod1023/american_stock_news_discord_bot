@@ -31,6 +31,9 @@ class NewsCacheManager:
                     # JSON에서 로드된 list를 set으로 변환
                     news_ids_list = cache.get('news_ids', [])
                     cache['news_ids'] = set(news_ids_list)
+                    # 요약형 전송 ID 세트 복원
+                    sent_summary_ids_list = cache.get('sent_summary_ids', [])
+                    cache['sent_summary_ids'] = set(sent_summary_ids_list)
                     logger.info(f"뉴스 캐시 로드 완료: {len(cache['news_ids'])}개 뉴스")
                     return cache
         except Exception as e:
@@ -39,7 +42,8 @@ class NewsCacheManager:
         return {
             "news_ids": set(),
             "last_update": None,
-            "total_processed": 0
+            "total_processed": 0,
+            "sent_summary_ids": set()
         }
     
     def _load_last_response(self) -> Dict:
@@ -65,6 +69,7 @@ class NewsCacheManager:
             # set을 list로 변환 (JSON 직렬화를 위해)
             cache_to_save = self.news_cache.copy()
             cache_to_save["news_ids"] = list(cache_to_save["news_ids"])
+            cache_to_save["sent_summary_ids"] = list(cache_to_save.get("sent_summary_ids", set()))
             
             with open(self.news_cache_file, 'w', encoding='utf-8') as f:
                 json.dump(cache_to_save, f, ensure_ascii=False, indent=2)
@@ -178,7 +183,8 @@ class NewsCacheManager:
             self.news_cache = {
                 "news_ids": set(),
                 "last_update": None,
-                "total_processed": 0
+                "total_processed": 0,
+                "sent_summary_ids": set()
             }
             self.last_response = {
                 "timestamp": None,
@@ -219,3 +225,25 @@ class NewsCacheManager:
         except Exception as e:
             logger.error(f"캐시 백업 실패: {e}")
             return None
+    
+    # --- Summary post tracking ---
+    def has_sent_summary(self, post_id: str) -> bool:
+        try:
+            sent_set = self.news_cache.get("sent_summary_ids")
+            if not isinstance(sent_set, set):
+                sent_set = set(sent_set or [])
+                self.news_cache["sent_summary_ids"] = sent_set
+            return post_id in sent_set
+        except Exception:
+            return False
+
+    def mark_sent_summary(self, post_id: str):
+        try:
+            sent_set = self.news_cache.get("sent_summary_ids")
+            if not isinstance(sent_set, set):
+                sent_set = set(sent_set or [])
+                self.news_cache["sent_summary_ids"] = sent_set
+            sent_set.add(post_id)
+            self._save_news_cache()
+        except Exception as e:
+            logger.error(f"요약 전송 ID 저장 실패: {e}")

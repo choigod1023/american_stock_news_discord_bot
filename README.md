@@ -131,6 +131,12 @@ GEMINI_API_KEY=AIzaSyC...  # 실제 API 키로 교체
 - API 키 오류 시 로그에 상세한 오류 메시지 표시
 - 모든 모델 초기화 실패 시에도 기본 뉴스 요약 제공
 
+**Discord 제한사항**:
+
+- 각 임베드 필드는 최대 1024자로 제한
+- 긴 요약은 자동으로 1020자에서 잘리고 "..." 표시
+- 임베드 전체는 최대 6000자로 제한
+
 ### 4. 디스코드 봇 생성
 
 1. [Discord Developer Portal](https://discord.com/developers/applications)에 접속
