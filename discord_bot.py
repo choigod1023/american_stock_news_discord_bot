@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands, tasks
 import logging
 from typing import List
-from google import genai
 
 from config import Config
 from cache_manager import NewsCacheManager

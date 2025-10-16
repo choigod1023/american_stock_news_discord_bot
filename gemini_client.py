@@ -3,7 +3,6 @@ Gemini AI 클라이언트 모듈
 다양한 Gemini API 버전을 지원하는 통합 클라이언트
 """
 import logging
-from google import genai
 
 from typing import Optional, Union
 
