@@ -90,3 +90,4 @@ def format_news_with_stock_info(news_list: List[Dict], max_items: int = 10) -> s
     
     return "\n".join(formatted_items)
 
+
