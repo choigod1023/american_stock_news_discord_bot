@@ -5,7 +5,7 @@
 
 import sys
 import os
-from discord_bot import main
+from discord_bot.discord_bot import main
 
 if __name__ == "__main__":
     try:

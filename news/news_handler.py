@@ -7,8 +7,8 @@ import aiohttp
 from io import BytesIO
 import discord
 
-from api_client import NewsAPIClient
-from cache_manager import NewsCacheManager
+from .api_client import NewsAPIClient
+from .cache_manager import NewsCacheManager
 
 logger = logging.getLogger(__name__)
 

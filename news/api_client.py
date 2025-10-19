@@ -93,7 +93,11 @@ class NewsAPIClient:
                 if response.status == 200:
                     return await response.json()
                 else:
+                    # 더 자세한 오류 정보 로깅
+                    error_text = await response.text()
                     logger.error(f"Community API 호출 실패: HTTP {response.status}")
+                    logger.error(f"API 응답: {error_text}")
+                    logger.error(f"요청 파라미터: {params}")
                     return None
                     
         except Exception as e:

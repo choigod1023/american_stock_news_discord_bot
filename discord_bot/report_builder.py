@@ -33,9 +33,9 @@ class ReportBuilder:
                 timestamp=current_time
             )
             
-            # 요약 내용 설정 (Discord 필드 최대 길이: 1024자)
-            if len(ai_summary) > 1024:
-                ai_summary = ai_summary[:1020] + "..."
+            # 요약 내용 설정 (Discord 필드 최대 길이: 2000자로 확장)
+            if len(ai_summary) > 2000:
+                ai_summary = ai_summary[:1997] + "..."
             
             embed.add_field(
                 name="📊 1시간 주요 동향",
@@ -83,24 +83,23 @@ class ReportBuilder:
             if len(market_info) > 1024:
                 market_info = market_info[:1020] + "..."
             
-            # 통계 정보
+            # 강화된 투자자 정보 생성
+            investor_info = self._create_enhanced_investor_info(market_data, news_count, current_time)
+            
+            # 투자자 정보 필드 길이 제한
+            if len(investor_info) > 1024:
+                investor_info = investor_info[:1020] + "..."
+            
             embed.add_field(
-                name="📊 시장 정보",
-                value=market_info if market_info else "시장 데이터 없음",
+                name="💼 투자자 정보",
+                value=investor_info,
                 inline=True
             )
             
-            # 리포트 정보 필드 생성 및 길이 제한
-            report_info = f"• 분석 뉴스 수: {news_count}개\n" \
-                         f"• 생성 시간: {current_time.strftime('%H:%M')}\n" \
-                         f"• 데이터 소스: Community API"
-            
-            if len(report_info) > 1024:
-                report_info = report_info[:1020] + "..."
-            
+            # 시장 정보 (간소화)
             embed.add_field(
-                name="📈 리포트 정보",
-                value=report_info,
+                name="📊 시장 정보",
+                value=market_info if market_info else "시장 데이터 없음",
                 inline=True
             )
             
@@ -151,3 +150,77 @@ class ReportBuilder:
         
         embed.set_footer(text="🧪 테스트 모드")
         return embed
+    
+    def _create_enhanced_investor_info(self, market_data: Dict, news_count: int, current_time) -> str:
+        """강화된 투자자 정보를 생성합니다."""
+        investor_info = ""
+        
+        # 시장 상황 분석
+        nasdaq = market_data.get('nasdaq', {}) if market_data else {}
+        fear_greed = market_data.get('fear_greed', {}) if market_data else {}
+        
+        # 시장 심리 분석
+        if fear_greed:
+            fg_value = fear_greed.get('value', 0)
+            if fg_value >= 75:
+                market_sentiment = "😍 극도 탐욕 (과열 주의)"
+                advice = "고점 매도 고려"
+            elif fg_value >= 55:
+                market_sentiment = "😊 탐욕 (상승 추세)"
+                advice = "적정 매수 기회"
+            elif fg_value >= 45:
+                market_sentiment = "😐 중립 (보합세)"
+                advice = "관망 또는 분할 매수"
+            elif fg_value >= 25:
+                market_sentiment = "😰 공포 (하락 압력)"
+                advice = "저점 매수 기회"
+            else:
+                market_sentiment = "😱 극도 공포 (과매도)"
+                advice = "대량 매수 기회"
+            
+            investor_info += f"🎯 **시장 심리**: {market_sentiment}\n"
+            investor_info += f"💡 **투자 조언**: {advice}\n"
+        
+        # 나스닥 분석
+        if nasdaq:
+            change_percent = nasdaq.get('change_percent', 0)
+            if change_percent > 1:
+                trend = "📈 강한 상승세"
+            elif change_percent > 0:
+                trend = "📈 상승세"
+            elif change_percent > -1:
+                trend = "📊 보합세"
+            else:
+                trend = "📉 하락세"
+            
+            investor_info += f"📊 **나스닥 추세**: {trend}\n"
+        
+        # 뉴스 활동도
+        if news_count > 20:
+            activity = "🔥 매우 활발"
+        elif news_count > 10:
+            activity = "📈 활발"
+        elif news_count > 5:
+            activity = "📊 보통"
+        else:
+            activity = "😴 조용"
+        
+        investor_info += f"📰 **뉴스 활동도**: {activity} ({news_count}개)\n"
+        
+        # 시간대별 투자 팁
+        hour = current_time.hour
+        if 9 <= hour <= 16:
+            time_advice = "🕘 장중 - 실시간 모니터링"
+        elif 16 < hour <= 20:
+            time_advice = "🕕 장후 - 다음날 준비"
+        elif 20 < hour <= 24 or 0 <= hour < 6:
+            time_advice = "🌙 야간 - 해외 시장 주시"
+        else:
+            time_advice = "🌅 장전 - 오늘 전략 수립"
+        
+        investor_info += f"⏰ **시간대 조언**: {time_advice}\n"
+        
+        # 추가 투자 팁
+        investor_info += f"📅 **업데이트**: {current_time.strftime('%H:%M')}\n"
+        
+        return investor_info

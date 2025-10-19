@@ -3,13 +3,13 @@ from discord.ext import commands, tasks
 import logging
 from typing import List
 
-from config import Config
-from cache_manager import NewsCacheManager
-from embed_builder import EmbedBuilder
-from image_handler import ImageHandler
-from news_handler import NewsHandler
-from command_handler import CommandHandler
-from report_scheduler import ReportScheduler
+from core.config import Config
+from news.cache_manager import NewsCacheManager
+from .embed_builder import EmbedBuilder
+from .image_handler import ImageHandler
+from news.news_handler import NewsHandler
+from .command_handler import CommandHandler
+from .report_scheduler import ReportScheduler
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)

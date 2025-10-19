@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict
 import discord
 
-from api_client import NewsAPIClient
+from news.api_client import NewsAPIClient
 
 class EmbedBuilder:
     """Discord 임베드 생성을 담당하는 클래스"""

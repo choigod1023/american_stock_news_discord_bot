@@ -4,9 +4,9 @@
 """
 import logging
 from typing import List, Dict, Optional
-from gemini_client import GeminiClient
-from news_formatter import NewsFormatter
-from fallback_summarizer import FallbackSummarizer
+from .gemini_client import GeminiClient
+from .news_formatter import NewsFormatter
+from .fallback_summarizer import FallbackSummarizer
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +74,8 @@ class AISummarizer:
             # 시장 데이터를 텍스트로 변환
             market_text = self.news_formatter.format_market_data_for_ai(market_data)
             
-            # 임베드용 초간단 한 줄 요약 프롬프트 생성
-            prompt = self.news_formatter.create_concise_one_liner_prompt(news_text, market_text, max_chars=200)
+            # 향상된 요약 프롬프트 생성 (중복 방지 및 최신 뉴스 우선)
+            prompt = self.news_formatter.create_enhanced_summary_prompt(news_text, market_text)
             
             # AI 요약 요청
             response = self.gemini_client.generate_content(prompt)
@@ -83,11 +83,11 @@ class AISummarizer:
             if response:
                 # 응답에서 텍스트 추출
                 ai_summary = self.gemini_client.extract_text_from_response(response)
-                # 안전장치: 개행 제거 및 길이 제한 적용
+                # 안전장치: 길이 제한 적용 (줄바꿈은 유지하여 가독성 향상)
                 if ai_summary:
-                    ai_summary = " ".join(ai_summary.splitlines()).strip()
-                    if len(ai_summary) > 200:
-                        ai_summary = ai_summary[:197] + "..."
+                    # 줄바꿈은 유지하되, 전체 길이만 제한
+                    if len(ai_summary) > 800:  # Discord 임베드에 맞게 800자로 제한
+                        ai_summary = ai_summary[:797] + "..."
                 if ai_summary:
                     logger.info(f"AI 요약 완료: {len(news_list)}개 뉴스 + 시장 데이터 처리")
                     return ai_summary

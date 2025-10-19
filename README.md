@@ -193,10 +193,10 @@ GEMINI_API_KEY=AIzaSyC...  # 실제 API 키로 교체
 ## 실행
 
 ```bash
-python discord_bot.py
-# 또는
 python run.py
 ```
+
+> **참고**: `run.py`가 메인 실행 파일입니다. 이 파일이 `discord_bot.discord_bot` 모듈을 import하여 봇을 실행합니다.
 
 ## 명령어
 
@@ -234,76 +234,106 @@ python run.py
 
 ```
 america/
-├── discord_bot.py          # 메인 봇 파일 (간소화됨)
-├── news_handler.py         # 뉴스 처리 및 전송 로직
-├── embed_builder.py        # Discord 임베드 생성
-├── image_handler.py        # 이미지 처리 및 전송
-├── command_handler.py      # Discord 명령어 처리
-├── api_client.py          # API 클라이언트 및 속보 감지 로직
-├── cache_manager.py       # 파일 기반 캐시 관리자
-├── ai_summarizer.py       # Gemini AI 요약 처리
-├── report_scheduler.py    # 1시간 주기 리포트 스케줄링
-├── report_builder.py      # AI 리포트 임베드 생성
-├── market_data.py         # 실시간 시장 데이터 수집 (나스닥, 공포탐욕지수)
-├── config.py              # 설정 관리
+├── run.py                 # 메인 실행 파일
 ├── requirements.txt       # 의존성 목록
 ├── config.env.example     # 환경 변수 예시
-├── run.py                 # 실행 파일
-├── .gitignore             # Git 무시 파일 목록
+├── README.md              # 이 파일
 ├── cache/                 # 캐시 파일 저장 디렉토리
 │   ├── news_cache.json    # 처리된 뉴스 ID 저장
 │   └── last_response.json # 마지막 API 응답 정보
-└── README.md              # 이 파일
+├── core/                  # 핵심 설정 및 유틸리티
+│   ├── __init__.py
+│   ├── config.py          # 설정 관리
+│   └── stock_utils.py     # 주식 관련 유틸리티 함수
+├── ai/                    # AI 관련 모듈
+│   ├── __init__.py
+│   ├── ai_summarizer.py   # Gemini AI 요약 처리
+│   ├── gemini_client.py   # Gemini API 클라이언트
+│   ├── fallback_summarizer.py # AI 실패 시 기본 요약
+│   └── news_formatter.py  # 뉴스 포맷팅 및 프롬프트 생성
+├── news/                  # 뉴스 처리 관련
+│   ├── __init__.py
+│   ├── api_client.py      # API 클라이언트 및 속보 감지 로직
+│   ├── news_handler.py    # 뉴스 처리 및 전송 로직
+│   ├── cache_manager.py   # 파일 기반 캐시 관리자
+│   └── market_data.py     # 실시간 시장 데이터 수집
+└── discord_bot/           # Discord 봇 관련
+    ├── __init__.py
+    ├── discord_bot.py     # 메인 봇 파일
+    ├── command_handler.py # Discord 명령어 처리
+    ├── embed_builder.py   # Discord 임베드 생성
+    ├── image_handler.py   # 이미지 처리 및 전송
+    ├── report_builder.py  # AI 리포트 임베드 생성
+    └── report_scheduler.py # 1시간 주기 리포트 스케줄링
 ```
 
 ## 모듈별 설명
 
-### 🏗️ **핵심 모듈**
+### 🏗️ **core/ - 핵심 모듈**
+
+- **`config.py`**: 환경 변수 관리, 설정 검증, 모든 설정값 중앙 관리
+- **`stock_utils.py`**: 주식 관련 유틸리티 함수, 종목 우선순위 정렬, 태그 분석
+
+### 🤖 **ai/ - AI 관련 모듈**
+
+- **`ai_summarizer.py`**: Gemini AI 연동, 뉴스 요약 생성, 시장 데이터 분석
+- **`gemini_client.py`**: Gemini API 클라이언트, AI 모델 초기화 및 관리
+- **`fallback_summarizer.py`**: AI 실패 시 기본 요약 생성, 안전장치 역할
+- **`news_formatter.py`**: 뉴스 포맷팅, AI 프롬프트 생성, 시장 데이터 변환
+
+### 📰 **news/ - 뉴스 처리 모듈**
+
+- **`api_client.py`**: 듀얼 API 지원, 속보 감지, 뉴스 분류 및 데이터 수집
+- **`news_handler.py`**: 뉴스 API 호출, 데이터 처리, 채널별 전송 관리
+- **`cache_manager.py`**: 파일 기반 캐시, 중복 방지, 통계 추적
+- **`market_data.py`**: 실시간 나스닥 주가, 공포탐욕지수 수집, Yahoo Finance API 연동
+
+### 💬 **discord_bot/ - Discord 봇 모듈**
 
 - **`discord_bot.py`**: 메인 봇 클래스, 모듈 조합 및 명령어 등록
-- **`news_handler.py`**: 뉴스 API 호출, 데이터 처리, 채널별 전송 관리
-- **`embed_builder.py`**: Discord 임베드 생성, 제목 정리, 다양한 임베드 타입 지원
 - **`command_handler.py`**: 모든 Discord 명령어 처리 및 사용자 권한 관리
+- **`embed_builder.py`**: Discord 임베드 생성, 제목 정리, 다양한 임베드 타입 지원
 - **`image_handler.py`**: 이미지 다운로드, 첨부, 오류 처리
-
-### 🔧 **유틸리티 모듈**
-
-- **`api_client.py`**: 듀얼 API 지원, 속보 감지, 뉴스 분류
-- **`cache_manager.py`**: 파일 기반 캐시, 중복 방지, 통계 추적
-- **`config.py`**: 환경 변수 관리, 설정 검증
-
-### 🤖 **AI 리포트 모듈**
-
-- **`ai_summarizer.py`**: Gemini AI 연동, 뉴스 요약 생성, 프롬프트 관리, 시장 데이터 분석
+- **`report_builder.py`**: AI 요약 결과를 Discord 임베드로 변환, 리포트 포맷팅
 - **`report_scheduler.py`**: 1시간 주기 스케줄링, Community 뉴스 수집, 리포트 생성 트리거
-- **`report_builder.py`**: AI 요약 결과를 Discord 임베드로 변환, 리포트 포맷팅, 시장 데이터 표시
-- **`market_data.py`**: 실시간 나스닥 주가, 공포탐욕지수 수집, Yahoo Finance API 연동
 
 ## 모듈화의 장점
 
 ### 🎯 **단일 책임 원칙**
 
 - 각 모듈이 하나의 명확한 역할을 담당
+- 기능별 디렉토리 분리로 코드 구조 명확화
 - 코드 수정 시 영향 범위 최소화
 - 버그 발생 시 원인 파악 용이
 
 ### 🔧 **유지보수성**
 
 - 기능별로 분리되어 수정이 쉬움
-- 새로운 기능 추가 시 해당 모듈만 수정
+- 새로운 기능 추가 시 해당 디렉토리만 수정
 - 코드 리뷰 및 테스트 용이
+- 모듈 간 의존성 명확화
 
 ### 📈 **확장성**
 
-- 새로운 명령어나 임베드 타입 쉽게 추가
+- 새로운 기능 추가 시 적절한 디렉토리에 모듈 추가
 - 다른 프로젝트에서 모듈 재사용 가능
 - 독립적인 모듈 테스트 가능
+- 플러그인 방식의 기능 확장
 
 ### 🏗️ **아키텍처**
 
-- 의존성 주입을 통한 느슨한 결합
-- 메인 봇 파일 80% 코드 감소 (499줄 → 95줄)
+- 계층화된 디렉토리 구조로 의존성 관리
+- `__init__.py`를 통한 모듈 인터페이스 표준화
 - 명확한 모듈 간 인터페이스
+- 패키지 기반 import 시스템
+
+### 📁 **디렉토리 구조의 이점**
+
+- **`core/`**: 핵심 설정과 유틸리티 중앙 관리
+- **`ai/`**: AI 관련 기능 독립적 관리
+- **`news/`**: 뉴스 처리 로직 캡슐화
+- **`discord_bot/`**: Discord 봇 기능 분리
+- 각 디렉토리별 독립적인 개발 및 테스트 가능
 
 ## 로깅
 

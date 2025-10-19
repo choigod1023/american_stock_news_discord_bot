@@ -4,10 +4,10 @@ from typing import List
 import discord
 from discord.ext import commands
 
-from api_client import NewsAPIClient
-from cache_manager import NewsCacheManager
-from embed_builder import EmbedBuilder
-from news_handler import NewsHandler
+from news.api_client import NewsAPIClient
+from news.cache_manager import NewsCacheManager
+from .embed_builder import EmbedBuilder
+from news.news_handler import NewsHandler
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +146,7 @@ class CommandHandler:
             
             embed = await self.embed_builder.create_test_embed(test_text, clean_title, is_breaking, news_type)
             await ctx.send(embed=embed)
+
 
 
 
