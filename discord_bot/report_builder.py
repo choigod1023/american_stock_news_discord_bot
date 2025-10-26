@@ -181,46 +181,59 @@ class ReportBuilder:
             investor_info += f"🎯 **시장 심리**: {market_sentiment}\n"
             investor_info += f"💡 **투자 조언**: {advice}\n"
         
-        # 나스닥 분석
+        # 나스닥 분석 및 리스크 평가
         if nasdaq:
             change_percent = nasdaq.get('change_percent', 0)
+            
             if change_percent > 1:
                 trend = "📈 강한 상승세"
+                risk_level = "🟡 중간"
             elif change_percent > 0:
                 trend = "📈 상승세"
+                risk_level = "🟢 낮음"
             elif change_percent > -1:
                 trend = "📊 보합세"
+                risk_level = "🟡 중간"
             else:
                 trend = "📉 하락세"
+                risk_level = "🟠 높음"
             
             investor_info += f"📊 **나스닥 추세**: {trend}\n"
+            investor_info += f"⚠️ **리스크**: {risk_level}\n"
         
-        # 뉴스 활동도
-        if news_count > 20:
-            activity = "🔥 매우 활발"
-        elif news_count > 10:
-            activity = "📈 활발"
-        elif news_count > 5:
-            activity = "📊 보통"
-        else:
-            activity = "😴 조용"
+        # 시장 강도 분석 (변동률 + 심리 지표 조합)
+        if nasdaq and fear_greed:
+            change_percent = nasdaq.get('change_percent', 0)
+            fg_value = fear_greed.get('value', 50)
+            
+            # 강도 계산: 변동률 절댓값 + 심리 지표
+            strength_score = abs(change_percent) + (fg_value / 10)
+            
+            if strength_score > 15:
+                market_strength = "💪 매우 강세"
+            elif strength_score > 10:
+                market_strength = "📈 강세"
+            elif strength_score > 5:
+                market_strength = "📊 보합"
+            elif strength_score > 2:
+                market_strength = "📉 약세"
+            else:
+                market_strength = "⚠️ 매우 약세"
+            
+            investor_info += f"🎯 **시장 강도**: {market_strength}\n"
+            
+            # 변동률 크기별 시장 안정성 판단
+            volatility = abs(change_percent)
+            if volatility > 2:
+                stability = "🔴 불안정"
+            elif volatility > 1:
+                stability = "🟡 보통"
+            else:
+                stability = "🟢 안정"
+            
+            investor_info += f"📊 **시장 안정성**: {stability}\n"
         
-        investor_info += f"📰 **뉴스 활동도**: {activity} ({news_count}개)\n"
-        
-        # 시간대별 투자 팁
-        hour = current_time.hour
-        if 9 <= hour <= 16:
-            time_advice = "🕘 장중 - 실시간 모니터링"
-        elif 16 < hour <= 20:
-            time_advice = "🕕 장후 - 다음날 준비"
-        elif 20 < hour <= 24 or 0 <= hour < 6:
-            time_advice = "🌙 야간 - 해외 시장 주시"
-        else:
-            time_advice = "🌅 장전 - 오늘 전략 수립"
-        
-        investor_info += f"⏰ **시간대 조언**: {time_advice}\n"
-        
-        # 추가 투자 팁
+        # 업데이트 시간
         investor_info += f"📅 **업데이트**: {current_time.strftime('%H:%M')}\n"
         
         return investor_info
