@@ -155,7 +155,7 @@ GEMINI_API_KEY=AIzaSyC...  # 실제 API 키로 교체
    - `MESSAGE CONTENT INTENT`는 **활성화하지 마세요** (필요하지 않음)
    - 다른 privileged intents도 비활성화 상태로 유지
 
-### 4. 채널 토픽 설정
+### 5. 채널 토픽 설정
 
 봇이 메시지를 전송할 채널의 토픽을 설정하세요:
 
